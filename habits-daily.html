@@ -45,6 +45,36 @@
   const defaultApiBase = window.location.hostname === 'localhost' ? 'http://localhost:4100/api' : '/api';
   const API_BASE = window.TRACKING_API_BASE || defaultApiBase;
 
+  const userTimeZone = (() => {
+    const formatter = new Intl.DateTimeFormat();
+    const { timeZone } = formatter.resolvedOptions();
+    if (!timeZone) {
+      throw new Error('Browser did not provide a timeZone.');
+    }
+    return timeZone;
+  })();
+
+  const parseIsoToLocalDate = (value) => {
+    if (typeof value !== 'string') {
+      throw new Error(`Expected date string but received ${value}`);
+    }
+    const parts = value.split('-').map(Number);
+    if (parts.length !== 3 || parts.some((part) => Number.isNaN(part))) {
+      throw new Error(`Invalid ISO date: ${value}`);
+    }
+    const [year, month, day] = parts;
+    return new Date(year, month - 1, day);
+  };
+
+  const formatDateForUser = (value, options) => {
+    const date = parseIsoToLocalDate(value);
+    const formatterOptions = {
+      ...(options || { month: 'short', day: 'numeric' })
+    };
+    formatterOptions.timeZone = userTimeZone;
+    return new Intl.DateTimeFormat(undefined, formatterOptions).format(date);
+  };
+
   (function () {
     const storageKey = 'sb-theme';
     const body = document.body;
@@ -367,10 +397,11 @@
           throw new Error(payload.error || 'Failed to load');
         }
         dailyData = payload.data;
-        const date = new Date(dailyData.date);
-        todayLabel.textContent = Number.isNaN(date.getTime())
-          ? dailyData.date
-          : date.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
+        todayLabel.textContent = formatDateForUser(dailyData.date, {
+          weekday: 'long',
+          month: 'short',
+          day: 'numeric'
+        });
         renderHabits();
       } catch (error) {
         console.error(error);
