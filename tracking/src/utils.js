@@ -4,17 +4,54 @@ export const STATUS = {
   MISSED: 'missed'
 };
 
+/**
+ * Gets the current date string in Eastern Time (EST/EDT)
+ * Eastern Time is UTC-5 (EST) or UTC-4 (EDT during daylight saving)
+ * Returns ISO date string (YYYY-MM-DD) in Eastern Time
+ */
+function getEasternDateString(date = new Date()) {
+  // Use Intl.DateTimeFormat to get the date components in Eastern Time
+  // This handles DST automatically
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
+  
+  const parts = formatter.formatToParts(date);
+  const year = parts.find(p => p.type === 'year').value;
+  const month = parts.find(p => p.type === 'month').value;
+  const day = parts.find(p => p.type === 'day').value;
+  
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * Gets a Date object representing the given date in Eastern Time
+ * Used for date arithmetic (e.g., in getDateRange)
+ */
+function getEasternDate(date = new Date()) {
+  const dateString = getEasternDateString(date);
+  const [year, month, day] = dateString.split('-').map(Number);
+  // Create date at midnight - the date components are already correct for Eastern Time
+  return new Date(year, month - 1, day, 0, 0, 0, 0);
+}
+
 export function todayIso() {
-  return formatDateIso(new Date());
+  return getEasternDateString();
 }
 
 export function formatDateIso(date) {
-  return date.toISOString().slice(0, 10);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 export function getDateRange(days, endDate = new Date()) {
   const range = [];
-  const end = new Date(endDate);
+  const end = getEasternDate(endDate);
   end.setHours(0, 0, 0, 0);
   for (let i = days - 1; i >= 0; i -= 1) {
     const d = new Date(end);
