@@ -30,12 +30,11 @@
   <div>
     <p class="summary-label">Today</p>
     <h2 id="today-label"></h2>
-    <p id="summary-copy">Logging habits keeps streaks honest. Data is stored locally in this prototype.</p>
+    <p id="summary-copy">Data is stored locally in this prototype.</p>
   </div>
   <div class="summary-metrics">
     <strong id="summary-count">0 / 0</strong>
-    <span>complete</span>
-    <button type="button" id="reset-day" class="link-button">Reset day</button>
+    <button type="button" id="reset-day" class="link-button">Reset today</button>
   </div>
 </section>
 
@@ -75,7 +74,7 @@
   (function () {
     const todayLabel = document.getElementById('today-label');
     const summaryCount = document.getElementById('summary-count');
-    const summaryCopy = document.getElementById('summary-copy');
+      const summaryCopy = document.getElementById('summary-copy');
     const listEl = document.getElementById('daily-habit-list');
     const resetBtn = document.getElementById('reset-day');
 
@@ -130,10 +129,10 @@
       summaryCount.textContent = `${achieved} / ${trackers.length}`;
       summaryCopy.textContent =
         achieved === trackers.length && trackers.length > 0
-          ? 'Locked in every habit. Nice.'
+          ? 'All habits complete.'
           : achieved === 0
-          ? 'Fresh slate. Start logging to build the streak.'
-          : 'Keep going—every check feeds the reflection dashboards.';
+          ? 'No habits logged yet.'
+          : 'Logging in progress.';
     };
 
     const sendUpdates = async (updates) => {

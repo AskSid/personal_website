@@ -21,10 +21,8 @@
 
 <header class="page-header">
   <div class="header-row">
-    <h1>Habit Health</h1>
+    <h1>Things Being Tracked</h1>
   </div>
-  <h3 style="font-weight: normal;">Global view of the past 30 days per habit.</h3>
-  <p style="margin-top: -10px;">Static prototype for now &mdash; Supabase wiring will replace the hard-coded data.</p>
 </header>
 
 <section id="global-status" class="card" style="display: none;"></section>
@@ -235,11 +233,6 @@
                 <p>${tracker.description || tracker.detail || ''}</p>
               </div>
             </div>
-          </div>
-          <div class="habit-tally">
-            <strong>${tracker.summary?.recentWins ?? 0}/7</strong>
-            <span>past 7 days</span>
-            <small>${tracker.summary?.completionRate ?? 0}% last 30</small>
           </div>
         </header>`;
 
