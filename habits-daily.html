@@ -42,7 +42,8 @@
 <section id="daily-habit-list" class="habit-daily-list"></section>
 
 <script>
-  const API_BASE = window.TRACKING_API_BASE || 'http://localhost:4100/api';
+  const defaultApiBase = window.location.hostname === 'localhost' ? 'http://localhost:4100/api' : '/api';
+  const API_BASE = window.TRACKING_API_BASE || defaultApiBase;
 
   (function () {
     const storageKey = 'sb-theme';
