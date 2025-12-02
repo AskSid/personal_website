@@ -511,20 +511,46 @@ body.dark-mode .calendar-day.status-missed {
   display: block;
 }
 
-.summary-metrics span {
-  font-size: 0.9rem;
-  display: block;
-  margin-bottom: 8px;
+.summary-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.summary-status p {
+  margin: 0;
 }
 
 .link-button {
-  border: none;
-  background: none;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  background: transparent;
   color: inherit;
-  text-decoration: underline;
+  text-decoration: none;
   cursor: pointer;
-  font-size: 0.95rem;
-  padding: 0;
+  font-size: 1rem;
+  font-family: inherit;
+  padding: 6px 14px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1.2;
+}
+
+.link-button:hover,
+.link-button:focus-visible {
+  background-color: rgba(0, 0, 0, 0.05);
+  text-decoration: none;
+  outline: none;
+}
+
+body.dark-mode .link-button {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+body.dark-mode .link-button:hover,
+body.dark-mode .link-button:focus-visible {
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .habit-daily-list {
@@ -630,8 +656,7 @@ body.dark-mode .habit-counter {
 }
 
 .habit-text input {
-  width: 100%;
-  max-width: 320px;
+  width: min(100%, 200px);
   padding: 10px 14px;
   border-radius: 8px;
   border: 1px solid rgba(0, 0, 0, 0.2);

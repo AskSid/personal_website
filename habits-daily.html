@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Habit Log | Daily View</title>
+  <title>Tracking | Daily View</title>
   <link rel="icon" type="image/png" href="pics/earth.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,18 +23,19 @@
   <div class="header-row">
     <h1>Habit Log</h1>
   </div>
-  <h3 style="font-weight: normal;">Today’s inputs feed the Supabase log.</h3>
 </header>
 
 <section class="card daily-summary" id="daily-summary">
   <div>
     <p class="summary-label">Today</p>
     <h2 id="today-label"></h2>
-    <p id="summary-copy">Data is stored locally in this prototype.</p>
+    <div class="summary-status">
+      <p id="summary-copy">Data is stored locally in this prototype.</p>
+      <button type="button" id="reset-day" class="link-button">Reset today</button>
+    </div>
   </div>
   <div class="summary-metrics">
     <strong id="summary-count">0 / 0</strong>
-    <button type="button" id="reset-day" class="link-button">Reset today</button>
   </div>
 </section>
 
