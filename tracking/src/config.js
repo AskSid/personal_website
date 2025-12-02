@@ -1,8 +1,5 @@
-import dotenv from 'dotenv';
-
-dotenv.config();
-
-export function getConfig() {
+export function getConfig(envSource = typeof process !== 'undefined' ? process.env : {}) {
+  const source = envSource ?? {};
   const {
     PORT = '4100',
     SUPABASE_URL = '',
@@ -10,7 +7,7 @@ export function getConfig() {
     SUPABASE_THINGS_TABLE = 'things_to_track',
     SUPABASE_ENTRIES_TABLE = 'tracking_entries',
     SUPABASE_HISTORY_LOOKBACK = '30'
-  } = process.env;
+  } = source;
 
   const historyLookback = Number.parseInt(SUPABASE_HISTORY_LOOKBACK, 10);
 

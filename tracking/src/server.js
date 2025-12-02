@@ -1,8 +1,11 @@
+import dotenv from 'dotenv';
 import express from 'express';
-import { fetchDailySnapshot, fetchGlobalSnapshot, persistDailyEntries } from './service.js';
-import { getConfig } from './config.js';
+import { createTrackingService } from './service.js';
 
-const config = getConfig();
+dotenv.config();
+
+const service = createTrackingService(process.env);
+const { config, fetchDailySnapshot, fetchGlobalSnapshot, persistDailyEntries } = service;
 const app = express();
 
 app.use(express.json());
