@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Blog | Sid Boppana</title>
+  <link rel="icon" type="image/png" href="pics/earth.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+<nav class="site-nav">
+  <div class="site-nav-links">
+    <a href="index.html">Home</a>
+    <a href="blog.html" class="is-active">Blog</a>
+  </div>
+  <button class="theme-toggle" id="theme-toggle" aria-label="Toggle color mode" type="button">🌙</button>
+</nav>
+
+<header class="page-header">
+  <div class="header-row">
+    <h1>Blog</h1>
+  </div>
+</header>
+
+  <div class="blog-post">
+    <div class="post-header">
+      <h2><a href="html_posts/2024-03-15-understanding-multimodal-ai-systems.html">Understanding Multimodal AI Systems</a></h2>
+      <div class="date">March 15, 2024</div>
+    </div>
+    <p>Multimodal AI systems process text, visuals, and more at the same time, creating richer models that feel closer to how humans reason about the world.</p>
+    <a href="html_posts/2024-03-15-understanding-multimodal-ai-systems.html">Read more →</a>
+  </div>
+
+<script>
+  (function() {
+    const storageKey = 'sb-theme';
+    const body = document.body;
+    const toggle = document.getElementById('theme-toggle');
+
+    const updateToggle = (isDark) => {
+      toggle.innerHTML = '<span class="toggle-icon">☀</span>';
+      toggle.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+    };
+
+    const applyTheme = (isDark) => {
+      body.classList.toggle('dark-mode', isDark);
+      updateToggle(isDark);
+    };
+
+    const storedPreference = localStorage.getItem(storageKey);
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const startDark = storedPreference ? storedPreference === 'dark' : prefersDark;
+    applyTheme(startDark);
+
+    toggle.addEventListener('click', () => {
+      const makeDark = !body.classList.contains('dark-mode');
+      applyTheme(makeDark);
+      localStorage.setItem(storageKey, makeDark ? 'dark' : 'light');
+    });
+  })();
+</script>
+</body>
+</html>

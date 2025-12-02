@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Habit Log | Daily View</title>
+  <link rel="icon" type="image/png" href="pics/earth.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<nav class="site-nav">
+  <div class="site-nav-links">
+    <a href="index.html">Home</a>
+    <a href="blog.html">Blog</a>
+  </div>
+  <button class="theme-toggle" id="theme-toggle" aria-label="Toggle color mode" type="button">🌙</button>
+</nav>
+
+<header class="page-header">
+  <div class="header-row">
+    <h1>Habit Log</h1>
+  </div>
+  <h3 style="font-weight: normal;">Today’s inputs feed the Supabase log.</h3>
+</header>
+
+<section class="card daily-summary" id="daily-summary">
+  <div>
+    <p class="summary-label">Today</p>
+    <h2 id="today-label"></h2>
+    <p id="summary-copy">Logging habits keeps streaks honest. Data is stored locally in this prototype.</p>
+  </div>
+  <div class="summary-metrics">
+    <strong id="summary-count">0 / 0</strong>
+    <span>complete</span>
+    <button type="button" id="reset-day" class="link-button">Reset day</button>
+  </div>
+</section>
+
+<section id="daily-habit-list" class="habit-daily-list"></section>
+
+<script>
+  const API_BASE = window.TRACKING_API_BASE || 'http://localhost:4100/api';
+
+  (function () {
+    const storageKey = 'sb-theme';
+    const body = document.body;
+    const toggle = document.getElementById('theme-toggle');
+
+    const updateToggle = (isDark) => {
+      toggle.innerHTML = '<span class="toggle-icon">☀</span>';
+      toggle.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+    };
+
+    const applyTheme = (isDark) => {
+      body.classList.toggle('dark-mode', isDark);
+      updateToggle(isDark);
+    };
+
+    const storedPreference = localStorage.getItem(storageKey);
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const startDark = storedPreference ? storedPreference === 'dark' : prefersDark;
+    applyTheme(startDark);
+
+    toggle.addEventListener('click', () => {
+      const makeDark = !body.classList.contains('dark-mode');
+      applyTheme(makeDark);
+      localStorage.setItem(storageKey, makeDark ? 'dark' : 'light');
+    });
+  })();
+
+  (function () {
+    const todayLabel = document.getElementById('today-label');
+    const summaryCount = document.getElementById('summary-count');
+    const summaryCopy = document.getElementById('summary-copy');
+    const listEl = document.getElementById('daily-habit-list');
+    const resetBtn = document.getElementById('reset-day');
+
+    let dailyData = null;
+    let isSaving = false;
+
+    const describeTarget = (tracker) => {
+      if (tracker.type === 'checkbox') {
+        return 'Log once';
+      }
+      if (tracker.type === 'text') {
+        return 'Log an entry';
+      }
+      const unit = tracker.unit ? ` ${tracker.unit}` : '';
+      return `${tracker.target ?? ''}${unit}`.trim();
+    };
+
+    const defaultValue = (tracker) => {
+      if (tracker.type === 'checkbox') {
+        return false;
+      }
+      if (tracker.type === 'text') {
+        return '';
+      }
+      if (typeof tracker.min === 'number') {
+        return tracker.min;
+      }
+      return 0;
+    };
+
+    const updateSummary = () => {
+      if (!dailyData) {
+        summaryCount.textContent = '0 / 0';
+        summaryCopy.textContent = 'Loading habit data…';
+        return;
+      }
+      const trackers = dailyData.trackers ?? [];
+      const achieved = trackers.reduce((total, tracker) => {
+        if (tracker.type === 'checkbox') {
+          return total + (tracker.value ? 1 : 0);
+        }
+        if (tracker.type === 'text') {
+          return total + (String(tracker.value || '').trim() ? 1 : 0);
+        }
+        if (typeof tracker.target === 'number' && typeof tracker.value === 'number') {
+          if (tracker.value >= tracker.target) {
+            return total + 1;
+          }
+        }
+        return total;
+      }, 0);
+      summaryCount.textContent = `${achieved} / ${trackers.length}`;
+      summaryCopy.textContent =
+        achieved === trackers.length && trackers.length > 0
+          ? 'Locked in every habit. Nice.'
+          : achieved === 0
+          ? 'Fresh slate. Start logging to build the streak.'
+          : 'Keep going—every check feeds the reflection dashboards.';
+    };
+
+    const sendUpdates = async (updates) => {
+      if (!dailyData || !updates.length) {
+        return;
+      }
+      isSaving = true;
+      updateSummary();
+      try {
+        const response = await fetch(`${API_BASE}/trackers/daily`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ date: dailyData.date, updates })
+        });
+        if (!response.ok) {
+          throw new Error('Request failed');
+        }
+        const payload = await response.json();
+        if (!payload.ok) {
+          throw new Error(payload.error || 'Failed to save');
+        }
+        dailyData = payload.data;
+      } catch (error) {
+        console.error(error);
+        alert('Unable to save right now.');
+      } finally {
+        isSaving = false;
+        renderHabits();
+        updateSummary();
+      }
+    };
+
+    const handleCheckboxChange = (tracker, checked) => {
+      tracker.value = checked;
+      sendUpdates([{ thingId: tracker.id, value: checked }]);
+      updateSummary();
+    };
+
+    const handleCounterChange = (tracker, delta) => {
+      const step = tracker.step ?? 1;
+      const min = typeof tracker.min === 'number' ? tracker.min : Number.NEGATIVE_INFINITY;
+      const max = typeof tracker.max === 'number' ? tracker.max : Number.POSITIVE_INFINITY;
+      const next = Math.min(max, Math.max(min, (tracker.value ?? 0) + delta * step));
+      tracker.value = next;
+      sendUpdates([{ thingId: tracker.id, value: next }]);
+      updateSummary();
+      return next;
+    };
+
+    const handleScaleChange = (tracker, value) => {
+      const numeric = Number(value);
+      tracker.value = numeric;
+      sendUpdates([{ thingId: tracker.id, value: numeric }]);
+      updateSummary();
+    };
+
+    const handleTextChange = (tracker, value) => {
+      const next = value ?? '';
+      tracker.value = next;
+      sendUpdates([{ thingId: tracker.id, value: next }]);
+      updateSummary();
+    };
+
+    const buildCheckboxControl = (tracker) => {
+      const wrapper = document.createElement('label');
+      wrapper.className = 'habit-checkbox';
+      const input = document.createElement('input');
+      input.type = 'checkbox';
+      input.checked = Boolean(tracker.value);
+      input.disabled = isSaving;
+      input.addEventListener('change', (event) => handleCheckboxChange(tracker, event.target.checked));
+      const text = document.createElement('span');
+      text.textContent = 'Done';
+      wrapper.appendChild(input);
+      wrapper.appendChild(text);
+      return wrapper;
+    };
+
+    const buildTextControl = (tracker) => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'habit-text';
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.value = tracker.value ?? '';
+      input.placeholder = tracker.unit ? `Enter ${tracker.unit}` : 'Enter value';
+      input.disabled = isSaving;
+      const commit = () => {
+        const next = input.value;
+        if ((tracker.value ?? '') === next) {
+          return;
+        }
+        handleTextChange(tracker, next);
+      };
+      input.addEventListener('change', commit);
+      input.addEventListener('keypress', (event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          commit();
+          input.blur();
+        }
+      });
+      wrapper.appendChild(input);
+      return wrapper;
+    };
+
+    const buildCounterControl = (tracker) => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'habit-counter';
+      const decrement = document.createElement('button');
+      decrement.className = 'counter-button';
+      decrement.type = 'button';
+      decrement.textContent = '−';
+      decrement.disabled = isSaving;
+
+      const increment = document.createElement('button');
+      increment.className = 'counter-button';
+      increment.type = 'button';
+      increment.textContent = '+';
+      increment.disabled = isSaving;
+
+      const valueEl = document.createElement('div');
+      valueEl.className = 'counter-value';
+
+      const updateDisplay = (next) => {
+        valueEl.textContent = `${next} ${tracker.unit || ''}`.trim();
+        if (typeof tracker.min === 'number') {
+          decrement.disabled = isSaving || next <= tracker.min;
+        }
+        if (typeof tracker.max === 'number') {
+          increment.disabled = isSaving || next >= tracker.max;
+        }
+      };
+
+      decrement.addEventListener('click', () => {
+        const next = handleCounterChange(tracker, -1);
+        updateDisplay(next);
+      });
+      increment.addEventListener('click', () => {
+        const next = handleCounterChange(tracker, 1);
+        updateDisplay(next);
+      });
+
+      updateDisplay(tracker.value ?? 0);
+      wrapper.appendChild(decrement);
+      wrapper.appendChild(valueEl);
+      wrapper.appendChild(increment);
+      return wrapper;
+    };
+
+    const buildScaleControl = (tracker) => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'habit-scale';
+      const input = document.createElement('input');
+      input.type = 'range';
+      input.min = tracker.min;
+      input.max = tracker.max;
+      input.step = tracker.step || 1;
+      input.value = tracker.value ?? tracker.min;
+      input.disabled = isSaving;
+      const display = document.createElement('span');
+      display.className = 'scale-value';
+      const updateDisplay = (val) => {
+        display.textContent = `Level ${val}`;
+      };
+      input.addEventListener('input', (event) => {
+        updateDisplay(event.target.value);
+      });
+      input.addEventListener('change', (event) => {
+        handleScaleChange(tracker, Number(event.target.value));
+      });
+      updateDisplay(input.value);
+      wrapper.appendChild(input);
+      wrapper.appendChild(display);
+      return wrapper;
+    };
+
+    const renderHabits = () => {
+      listEl.innerHTML = '';
+      if (!dailyData) {
+        const loader = document.createElement('p');
+        loader.textContent = 'Loading…';
+        listEl.appendChild(loader);
+        return;
+      }
+
+      dailyData.trackers.forEach((tracker) => {
+        const card = document.createElement('article');
+        card.className = 'habit-card card daily-card';
+        const row = document.createElement('div');
+        row.className = 'habit-daily-row';
+        row.innerHTML = `
+          <div class="habit-title">
+            <span class="habit-icon" aria-hidden="true">${tracker.icon || ''}</span>
+            <div>
+              <h3>${tracker.label}</h3>
+              <p>${tracker.description || ''}</p>
+              <small class="habit-target">Target: ${describeTarget(tracker) || 'n/a'}</small>
+            </div>
+          </div>`;
+
+        const controls = document.createElement('div');
+        controls.className = 'habit-controls';
+
+        if (tracker.type === 'checkbox') {
+          controls.appendChild(buildCheckboxControl(tracker));
+        } else if (tracker.type === 'counter') {
+          controls.appendChild(buildCounterControl(tracker));
+        } else if (tracker.type === 'scale') {
+          controls.appendChild(buildScaleControl(tracker));
+        } else if (tracker.type === 'text') {
+          controls.appendChild(buildTextControl(tracker));
+        }
+
+        row.appendChild(controls);
+        card.appendChild(row);
+        listEl.appendChild(card);
+      });
+
+      updateSummary();
+    };
+
+    const loadDaily = async () => {
+      listEl.innerHTML = '<p>Loading…</p>';
+      try {
+        const response = await fetch(`${API_BASE}/trackers/daily`);
+        if (!response.ok) {
+          throw new Error('Request failed');
+        }
+        const payload = await response.json();
+        if (!payload.ok) {
+          throw new Error(payload.error || 'Failed to load');
+        }
+        dailyData = payload.data;
+        const date = new Date(dailyData.date);
+        todayLabel.textContent = Number.isNaN(date.getTime())
+          ? dailyData.date
+          : date.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
+        renderHabits();
+      } catch (error) {
+        console.error(error);
+        listEl.innerHTML = '<p>Unable to load daily trackers.</p>';
+      }
+    };
+
+    resetBtn.addEventListener('click', () => {
+      if (!dailyData) {
+        return;
+      }
+      const updates = dailyData.trackers.map((tracker) => ({
+        thingId: tracker.id,
+        value: defaultValue(tracker)
+      }));
+      sendUpdates(updates);
+    });
+
+    loadDaily();
+  })();
+</script>
+</body>
+</html>
