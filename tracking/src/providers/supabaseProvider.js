@@ -33,6 +33,58 @@ function mapThingRow(row) {
     return Number.isFinite(parsed) ? parsed : null;
   };
 
+  const pickDefaultCandidate = () => {
+    if (row.default_value !== undefined) return row.default_value;
+    if (row.defaultValue !== undefined) return row.defaultValue;
+    if (row.start_value !== undefined) return row.start_value;
+    if (meta.default !== undefined) return meta.default;
+    if (meta.default_value !== undefined) return meta.default_value;
+    if (meta.start !== undefined) return meta.start;
+    return undefined;
+  };
+
+  const coerceDefaultValue = (type, raw) => {
+    if (raw === undefined) {
+      return undefined;
+    }
+    if (raw === null) {
+      return null;
+    }
+    if (type === 'checkbox') {
+      if (typeof raw === 'boolean') {
+        return raw;
+      }
+      if (typeof raw === 'number') {
+        return raw !== 0;
+      }
+      if (typeof raw === 'string') {
+        const normalised = raw.trim().toLowerCase();
+        if (normalised === 'true' || normalised === '1') {
+          return true;
+        }
+        if (normalised === 'false' || normalised === '0') {
+          return false;
+        }
+      }
+      throw new Error(`Invalid default for checkbox tracker ${row.id}.`);
+    }
+    if (type === 'counter' || type === 'scale') {
+      if (typeof raw === 'number') {
+        return raw;
+      }
+      if (typeof raw === 'string' && raw.trim() !== '') {
+        const parsed = Number(raw);
+        if (Number.isFinite(parsed)) {
+          return parsed;
+        }
+      }
+      throw new Error(`Invalid numeric default for tracker ${row.id}.`);
+    }
+    return raw;
+  };
+
+  const defaultValue = coerceDefaultValue(row.type, pickDefaultCandidate());
+
   return {
     id: row.id,
     label: row.label ?? row.name ?? '',
@@ -44,7 +96,7 @@ function mapThingRow(row) {
     min: parseNumber(row.min_value ?? meta.min ?? meta.min_value),
     max: parseNumber(row.max_value ?? meta.max ?? meta.max_value),
     step: parseNumber(row.step ?? meta.step) ?? 1,
-    start: parseNumber(row.start_value ?? meta.start)
+    defaultValue
   };
 }
 
@@ -84,6 +136,13 @@ export function createSupabaseProvider(config) {
   const thingsEndpoint = `${config.supabaseUrl}/rest/v1/${config.thingsTable}`;
   const entriesEndpoint = `${config.supabaseUrl}/rest/v1/${config.entriesTable}`;
 
+  const serialiseEntryValue = (value) => {
+    if (value === null || value === undefined) {
+      return null;
+    }
+    return String(value);
+  };
+
   async function fetchJson(url, options = {}) {
     const response = await fetch(url, {
       ...options,
@@ -120,6 +179,19 @@ export function createSupabaseProvider(config) {
     url.searchParams.set('entry_date', `gte.${startDate}`);
     url.searchParams.set('order', 'entry_date.asc');
     return (await fetchJson(url)) ?? [];
+  }
+
+  async function persistEntries(payload) {
+    if (!payload.length) {
+      return;
+    }
+    await fetchJson(entriesEndpoint, {
+      method: 'POST',
+      headers: {
+        Prefer: 'resolution=merge-duplicates'
+      },
+      body: JSON.stringify(payload)
+    });
   }
 
   async function listEntriesForDate(date) {
@@ -188,6 +260,27 @@ export function createSupabaseProvider(config) {
     entries.forEach((entry) => {
       entriesByThing.set(entry.tracking_id, entry);
     });
+
+    const missingThings = things.filter((thing) => !entriesByThing.has(thing.id));
+    if (missingThings.length) {
+      const seedPayload = missingThings.map((thing) => {
+        const value = defaultValueForThing(thing);
+        return {
+          tracking_id: thing.id,
+          entry_date: date,
+          value: serialiseEntryValue(value)
+        };
+      });
+      await persistEntries(seedPayload);
+      missingThings.forEach((thing, index) => {
+        entriesByThing.set(thing.id, {
+          tracking_id: thing.id,
+          entry_date: date,
+          value: seedPayload[index].value
+        });
+      });
+    }
+
     return {
       date,
       trackers: things.map((thing) => {
@@ -204,7 +297,8 @@ export function createSupabaseProvider(config) {
           min: thing.min ?? null,
           max: thing.max ?? null,
           step: thing.step ?? 1,
-          value
+          value,
+          defaultValue: defaultValueForThing(thing)
         };
       })
     };
@@ -214,22 +308,24 @@ export function createSupabaseProvider(config) {
     if (!updates?.length) {
       return getDailyPayload(date);
     }
+    const entries = await listEntriesForDate(date);
+    const entriesByThing = new Map();
+    entries.forEach((entry) => {
+      entriesByThing.set(entry.tracking_id, entry);
+    });
+
     const payload = updates.map((update) => {
-      const value = update.value;
+      const row = entriesByThing.get(update.thingId);
+      const nextValue = update.value === undefined ? null : update.value;
       return {
+        id: row?.id,
         tracking_id: update.thingId,
         entry_date: date,
-        value: value === null || value === undefined ? null : String(value)
+        value: serialiseEntryValue(nextValue)
       };
     });
 
-    await fetchJson(entriesEndpoint, {
-      method: 'POST',
-      headers: {
-        Prefer: 'resolution=merge-duplicates'
-      },
-      body: JSON.stringify(payload)
-    });
+    await persistEntries(payload);
 
     return getDailyPayload(date);
   }

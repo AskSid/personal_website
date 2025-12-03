@@ -73,22 +73,13 @@ export function normaliseDateInput(input) {
 }
 
 export function defaultValueForThing(thing) {
-  if (thing.type === 'checkbox') {
-    return false;
+  if (!thing || !Object.prototype.hasOwnProperty.call(thing, 'defaultValue')) {
+    throw new Error('Thing is missing a configured default value.');
   }
-  if (thing.type === 'text') {
-    return '';
+  if (thing.defaultValue === undefined) {
+    throw new Error('Thing is missing a configured default value.');
   }
-  if (thing.type === 'counter' || thing.type === 'scale') {
-    if (typeof thing.start === 'number') {
-      return thing.start;
-    }
-    if (typeof thing.min === 'number') {
-      return thing.min;
-    }
-    return 0;
-  }
-  return null;
+  return thing.defaultValue;
 }
 
 export function computeStatusForThing(thing, value) {

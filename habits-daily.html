@@ -124,16 +124,10 @@
     };
 
     const defaultValue = (tracker) => {
-      if (tracker.type === 'checkbox') {
-        return false;
+      if (!tracker || !Object.prototype.hasOwnProperty.call(tracker, 'defaultValue')) {
+        throw new Error('Tracker is missing a configured default value.');
       }
-      if (tracker.type === 'text') {
-        return '';
-      }
-      if (typeof tracker.min === 'number') {
-        return tracker.min;
-      }
-      return 0;
+      return tracker.defaultValue;
     };
 
     const updateSummary = () => {
