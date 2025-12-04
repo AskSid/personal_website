@@ -159,6 +159,10 @@ body.dark-mode .theme-toggle {
   white-space: nowrap;
 }
 
+.updates a {
+  display: inline;
+}
+
 .blog-post {
   margin-bottom: 40px;
   padding: 8px 20px 20px;
@@ -304,8 +308,8 @@ body.dark-mode .card.is-error {
   font-size: 1.2rem;
 }
 
-body.dark-mode .habit-nav-button::after {
-  background: transparent;
+body.dark-mode .habit-nav-button.is-active::after {
+  background: currentColor;
 }
 
 .habit-chart {
@@ -688,5 +692,152 @@ body.dark-mode .habit-text input {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
+  }
+}
+
+.favorite-image {
+  height: auto;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  max-width: 300px;
+}
+
+body.dark-mode .favorite-image {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.favorites-category-nav {
+  justify-content: center;
+  margin-bottom: 15px;
+}
+
+.favorites-category-nav .habit-nav-button {
+  font-size: 1.2rem;
+  padding: 8px 16px;
+}
+
+.favorites-category-nav .habit-nav-button:hover,
+.favorites-category-nav .habit-nav-button:focus-visible {
+  text-decoration: none;
+}
+
+.favorites-category-container {
+  position: relative;
+  min-height: 450px;
+  display: flex;
+  align-items: flex-start;
+}
+
+.favorites-category {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.favorites-category.active {
+  position: relative;
+  opacity: 1;
+  visibility: visible;
+}
+
+.favorites-slideshow-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 30px;
+  min-height: 400px;
+}
+
+.favorites-slideshow {
+  flex: 1;
+  position: relative;
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.favorite-slide {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  width: 100%;
+  max-width: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.favorite-slide.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.favorite-slide img {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.slideshow-arrow {
+  background: var(--bg-color);
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  color: var(--text-color);
+  font-size: 1.5rem;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.slideshow-arrow:hover:not(:disabled) {
+  background-color: rgba(0, 0, 0, 0.05);
+  transform: scale(1.1);
+}
+
+.slideshow-arrow:disabled {
+  cursor: not-allowed;
+  opacity: 0.3;
+}
+
+body.dark-mode .slideshow-arrow {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+body.dark-mode .slideshow-arrow:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+@media (max-width: 600px) {
+  .slideshow-arrow {
+    width: 35px;
+    height: 35px;
+    font-size: 1.2rem;
+  }
+  
+  .favorites-slideshow {
+    min-height: 250px;
   }
 }

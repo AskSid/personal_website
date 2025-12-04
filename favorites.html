@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Favorites | Sid Boppana</title>
+  <link rel="icon" type="image/png" href="pics/earth.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+<nav class="site-nav">
+  <div class="site-nav-links">
+    <a href="index.html">Home</a>
+    <a href="blog.html">Blog</a>
+  </div>
+  <button class="theme-toggle" id="theme-toggle" aria-label="Toggle color mode" type="button">🌙</button>
+</nav>
+
+<header class="page-header">
+  <div class="header-row">
+    <h1>Favorites</h1>
+  </div>
+</header>
+
+<section>
+<div style="margin: 20px 0;">
+  <div class="habit-nav favorites-category-nav" id="category-nav">
+    <button class="habit-nav-button is-active" data-category="walks">Walks + Hikes</button>
+    <button class="habit-nav-button" data-category="albums">Albums</button>
+    <button class="habit-nav-button" data-category="art">Art</button>
+  </div>
+
+  <div class="favorites-category-container">
+    <div class="favorites-category active" data-category="walks">
+      <div class="favorites-slideshow-container">
+        <button class="slideshow-arrow slideshow-arrow-left" aria-label="Previous">←</button>
+        <div class="favorites-slideshow" data-slideshow="walks">
+          <div class="favorite-slide active">
+            <img src="pics/walks_and_hikes/nyc_walk.png" alt="Walk across Manhattan, NYC (2025)" class="favorite-image" style="max-width: 400px;">
+            <p style="margin-top: 8px; font-size: 0.9em;">Walk across Manhattan, NYC (2025)</p>
+          </div>
+          <div class="favorite-slide">
+            <img src="pics/walks_and_hikes/seattle_hike.png" alt="Hike, Seattle (2025)" class="favorite-image">
+            <p style="margin-top: 8px; font-size: 0.9em;">Hike in Mount Rainier National Park, Seattle (2025)</p>
+          </div>
+          <div class="favorite-slide">
+            <img src="pics/walks_and_hikes/salkantay_trek.jpg" alt="Salkantay Trek, Peru (2024)" class="favorite-image">
+            <p style="margin-top: 8px; font-size: 0.9em;">Salkantay Trek, Peru (2024)</p>
+          </div>
+        </div>
+        <button class="slideshow-arrow slideshow-arrow-right" aria-label="Next">→</button>
+      </div>
+    </div>
+
+    <div class="favorites-category" data-category="albums">
+      <div class="favorites-slideshow-container">
+        <button class="slideshow-arrow slideshow-arrow-left" aria-label="Previous">←</button>
+        <div class="favorites-slideshow" data-slideshow="albums">
+          <div class="favorite-slide active">
+            <img src="pics/albums/nocturnes.png" alt="Chopin Nocturnes, Arthur Rubinstein" class="favorite-image" style="max-width: 300px;">
+            <p style="margin-top: 8px; font-size: 0.9em;">Chopin Nocturnes, Arthur Rubinstein (1967)</p>
+          </div>
+          <div class="favorite-slide">
+            <img src="pics/albums/igor.png" alt="IGOR" class="favorite-image" style="max-width: 300px;">
+            <p style="margin-top: 8px; font-size: 0.9em;">IGOR by Tyler, The Creator (2019)</p>
+          </div>
+          <div class="favorite-slide">
+            <img src="pics/albums/good_kid_maad_city.png" alt="Good Kid, M.A.A.D City" class="favorite-image" style="max-width: 300px;">
+            <p style="margin-top: 8px; font-size: 0.9em;">Good Kid, M.A.A.D City by Kendrick Lamar (2012)</p>
+          </div>
+          <div class="favorite-slide">
+            <img src="pics/albums/lonerism.png" alt="Lonerism" class="favorite-image" style="max-width: 300px;">
+            <p style="margin-top: 8px; font-size: 0.9em;">Lonerism by Tame Impala (2012)</p>
+          </div>
+          <div class="favorite-slide">
+            <img src="pics/albums/ambient1.png" alt="Ambient 1" class="favorite-image" style="max-width: 300px;">
+            <p style="margin-top: 8px; font-size: 0.9em;">Ambient 1: Music for Airports by Brian Eno (1978)</p>
+          </div>
+        </div>
+        <button class="slideshow-arrow slideshow-arrow-right" aria-label="Next">→</button>  
+      </div>
+    </div>
+
+    <div class="favorites-category" data-category="art">
+      <div class="favorites-slideshow-container">
+        <button class="slideshow-arrow slideshow-arrow-left" aria-label="Previous">←</button>
+        <div class="favorites-slideshow" data-slideshow="art">
+          <div class="favorite-slide active">
+            <img src="pics/art/haystacks.png" alt="Haystacks" class="favorite-image">
+            <p style="margin-top: 8px; font-size: 0.9em;">Haystacks, Monet</p>
+          </div>
+          <div class="favorite-slide">
+            <img src="pics/art/rooms_by_the_sea.png" alt="Rooms by the Sea" class="favorite-image">
+            <p style="margin-top: 8px; font-size: 0.9em;">Rooms by the Sea, Edward Hopper</p>
+          </div>
+        </div>
+        <button class="slideshow-arrow slideshow-arrow-right" aria-label="Next">→</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+</section>
+
+<script>
+  (function() {
+    const storageKey = 'sb-theme';
+    const body = document.body;
+    const toggle = document.getElementById('theme-toggle');
+
+    const updateToggle = (isDark) => {
+      toggle.innerHTML = '<span class="toggle-icon">☀</span>';
+      toggle.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+    };
+
+    const applyTheme = (isDark) => {
+      body.classList.toggle('dark-mode', isDark);
+      updateToggle(isDark);
+    };
+
+    const storedPreference = localStorage.getItem(storageKey);
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const startDark = storedPreference ? storedPreference === 'dark' : prefersDark;
+    applyTheme(startDark);
+
+    toggle.addEventListener('click', () => {
+      const makeDark = !body.classList.contains('dark-mode');
+      applyTheme(makeDark);
+      localStorage.setItem(storageKey, makeDark ? 'dark' : 'light');
+    });
+  })();
+
+  // Category navigation
+  (function() {
+    const categoryNav = document.getElementById('category-nav');
+    const categoryButtons = categoryNav.querySelectorAll('.habit-nav-button');
+    const categories = document.querySelectorAll('.favorites-category');
+
+    // Initialize first category
+    const firstCategory = document.querySelector('.favorites-category.active');
+    if (firstCategory) {
+      firstCategory.style.opacity = '1';
+      firstCategory.style.visibility = 'visible';
+    }
+
+    categoryButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const targetCategory = button.getAttribute('data-category');
+        
+        // Update active button
+        categoryButtons.forEach(btn => btn.classList.remove('is-active'));
+        button.classList.add('is-active');
+        
+        // Update active category with smooth transition
+        categories.forEach(cat => {
+          if (cat.getAttribute('data-category') === targetCategory) {
+            cat.classList.add('active');
+            cat.style.visibility = 'visible';
+            requestAnimationFrame(() => {
+              cat.style.opacity = '1';
+            });
+          } else {
+            cat.style.opacity = '0';
+            setTimeout(() => {
+              cat.style.visibility = 'hidden';
+              cat.classList.remove('active');
+            }, 300);
+          }
+        });
+      });
+    });
+  })();
+
+  // Slideshow functionality
+  (function() {
+    function initSlideshow(slideshow) {
+      const slides = slideshow.querySelectorAll('.favorite-slide');
+      const container = slideshow.closest('.favorites-slideshow-container');
+      const prevBtn = container.querySelector('.slideshow-arrow-left');
+      const nextBtn = container.querySelector('.slideshow-arrow-right');
+      let currentIndex = 0;
+
+      function showSlide(index) {
+        slides.forEach((slide, i) => {
+          if (i === index) {
+            slide.classList.add('active');
+            slide.style.visibility = 'visible';
+            // Use requestAnimationFrame for smooth transition
+            requestAnimationFrame(() => {
+              slide.style.opacity = '1';
+            });
+          } else {
+            slide.style.opacity = '0';
+            setTimeout(() => {
+              slide.style.visibility = 'hidden';
+              slide.classList.remove('active');
+            }, 300);
+          }
+        });
+        currentIndex = index;
+        
+        // Update arrow visibility
+        prevBtn.style.opacity = index === 0 ? '0.3' : '1';
+        prevBtn.disabled = index === 0;
+        nextBtn.style.opacity = index === slides.length - 1 ? '0.3' : '1';
+        nextBtn.disabled = index === slides.length - 1;
+      }
+
+      prevBtn.addEventListener('click', () => {
+        if (currentIndex > 0) {
+          showSlide(currentIndex - 1);
+        }
+      });
+
+      nextBtn.addEventListener('click', () => {
+        if (currentIndex < slides.length - 1) {
+          showSlide(currentIndex + 1);
+        }
+      });
+
+      // Initialize - set initial slide opacity
+      slides.forEach((slide, i) => {
+        if (i === 0) {
+          slide.classList.add('active');
+          slide.style.opacity = '1';
+          slide.style.visibility = 'visible';
+        } else {
+          slide.style.opacity = '0';
+          slide.style.visibility = 'hidden';
+        }
+      });
+      showSlide(0);
+    }
+
+    // Initialize all slideshows
+    const slideshows = document.querySelectorAll('.favorites-slideshow');
+    slideshows.forEach(initSlideshow);
+  })();
+</script>
+</body>
+</html>
+
